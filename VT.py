@@ -3,18 +3,18 @@ import pandas as pd
 import requests
 import pycountry
 
-API_KEY = 'b66edaf4b66520d9a8d17bc674fde9821c9327c04c1e99a82b8186ac486c2b02'
+API_KEY = 'YOUR_VIRUSTOTAL_API_KEY'
+
+def get_country_name(country_code):
+    try:
+        return pycountry.countries.get(alpha_2=country_code).name
+    except AttributeError:
+        return country_code  # If the conversion fails, return the code itself
 
 def get_virustotal_data(item):
     headers = {
         "x-apikey": API_KEY
     }
-    # Function to convert country code to country name
-    def get_country_name(country_code):
-        try:
-            return pycountry.countries.get(alpha_2=country_code).name
-        except AttributeError:
-            return country_code  # If the conversion fails, return the code itself
 
     # Determine if it's an IP, Hash, URL, or Domain
     if len(item.split('.')) == 4:  # Assuming it's an IP
@@ -26,31 +26,6 @@ def get_virustotal_data(item):
     else:  # Assuming it's a Domain
         endpoint = f'https://www.virustotal.com/api/v3/domains/{item}'
 
-    response = requests.get(endpoint, headers=headers)
-    
-    if response.status_code == 200:
-        data = response.json()
-        result = {
-            "item": item,
-            "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
-            "reputation": data['data']['attributes'].get('reputation', 'N/A'),
-        }
-        
-        if endpoint.endswith(f'ip_addresses/{item}'):
-            result.update({
-                "type": "IP",
-                "country": data['data']['attributes'].get('country', 'N/A'),
-                "details": ", ".join([domain['id'] for domain in data.get('data', {}).get('relationships', {}).get('resolutions', {}).get('data', [])])
-            })
-        else:
-            result.update({
-                "type": "Hash" if (len(item) in [32, 40, 64]) else ("URL" if '://' in item else "Domain"),
-                "details": data['data']['id']
-            })
-            
-        return result
-    else:
-        return {"item": item, "error": response.text}
     response = requests.get(endpoint, headers=headers)
     
     if response.status_code == 200:
@@ -75,7 +50,7 @@ def get_virustotal_data(item):
         return result
     else:
         return {"item": item, "error": response.text}
-        
+
 def main():
     st.title("VirusTotal Bulk Lookup")
 
