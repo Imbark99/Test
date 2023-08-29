@@ -8,6 +8,12 @@ def get_virustotal_data(item):
     headers = {
         "x-apikey": API_KEY
     }
+    # Function to convert country code to country name
+    def get_country_name(country_code):
+        try:
+            return pycountry.countries.get(alpha_2=country_code).name
+        except AttributeError:
+            return country_code  # If the conversion fails, return the code itself
 
     # Determine if it's an IP, Hash, URL, or Domain
     if len(item.split('.')) == 4:  # Assuming it's an IP
@@ -44,7 +50,31 @@ def get_virustotal_data(item):
         return result
     else:
         return {"item": item, "error": response.text}
-
+    response = requests.get(endpoint, headers=headers)
+    
+    if response.status_code == 200:
+        data = response.json()
+        result = {
+            "item": item,
+            "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
+            "reputation": data['data']['attributes'].get('reputation', 'N/A'),
+        }
+        
+        if endpoint.endswith(f'ip_addresses/{item}'):
+            country_code = data['data']['attributes'].get('country', 'N/A')
+            result.update({
+                "type": "IP",
+                "country": get_country_name(country_code)  # Use our conversion function here
+            })
+        else:
+            result.update({
+                "type": "Hash" if (len(item) in [32, 40, 64]) else ("URL" if '://' in item else "Domain"),
+            })
+            
+        return result
+    else:
+        return {"item": item, "error": response.text}
+        
 def main():
     st.title("VirusTotal Bulk Lookup")
 
