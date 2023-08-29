@@ -23,25 +23,24 @@ def get_virustotal_data(item):
     
     if response.status_code == 200:
         data = response.json()
-        # Common fields
         result = {
             "item": item,
             "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
             "reputation": data['data']['attributes'].get('reputation', 'N/A'),
         }
-        # IP-specific fields
-        if endpoint.endswith('ip_addresses/{item}'):
+        
+        if endpoint.endswith(f'ip_addresses/{item}'):
             result.update({
                 "type": "IP",
-                "country": data.get('data', {}).get('attributes', {}).get('country', 'N/A'),
+                "country": data['data']['attributes'].get('country', 'N/A'),
                 "details": ", ".join([domain['id'] for domain in data.get('data', {}).get('relationships', {}).get('resolutions', {}).get('data', [])])
             })
-        # Handle other types (hash, URL, domain)
         else:
             result.update({
                 "type": "Hash" if (len(item) in [32, 40, 64]) else ("URL" if '://' in item else "Domain"),
                 "details": data['data']['id']
             })
+            
         return result
     else:
         return {"item": item, "error": response.text}
