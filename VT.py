@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 import pycountry
 
-API_KEY = 'YOUR_VIRUSTOTAL_API_KEY'
+API_KEY = 'b66edaf4b66520d9a8d17bc674fde9821c9327c04c1e99a82b8186ac486c2b02'
 
 def get_country_name(country_code):
     try:
