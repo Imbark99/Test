@@ -9,25 +9,40 @@ def get_virustotal_data(item):
         "x-apikey": API_KEY
     }
 
-    # Determine if it's an IP, Hash or URL
+    # Determine if it's an IP, Hash, URL, or Domain
     if len(item.split('.')) == 4:  # Assuming it's an IP
         endpoint = f'https://www.virustotal.com/api/v3/ip_addresses/{item}'
     elif len(item) == 32 or len(item) == 40 or len(item) == 64:  # Assuming it's a hash (MD5, SHA1, SHA256)
         endpoint = f'https://www.virustotal.com/api/v3/files/{item}'
-    else:  # Assuming it's a URL
+    elif '://' in item:  # Assuming it's a URL
         endpoint = f'https://www.virustotal.com/api/v3/urls/{item}'
+    else:  # Assuming it's a Domain
+        endpoint = f'https://www.virustotal.com/api/v3/domains/{item}'
 
     response = requests.get(endpoint, headers=headers)
     
     if response.status_code == 200:
         data = response.json()
-        return {
+        # Common fields
+        result = {
             "item": item,
-            "type": "IP" if len(item.split('.')) == 4 else ("Hash" if (len(item) in [32, 40, 64]) else "URL"),
             "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
             "reputation": data['data']['attributes'].get('reputation', 'N/A'),
-            "details": ", ".join([data['id'] for data in data.get('data', {}).get('relationships', {}).get('resolutions', {}).get('data', [])])
         }
+        # IP-specific fields
+        if endpoint.endswith('ip_addresses/{item}'):
+            result.update({
+                "type": "IP",
+                "country": data.get('data', {}).get('attributes', {}).get('country', 'N/A'),
+                "details": ", ".join([domain['id'] for domain in data.get('data', {}).get('relationships', {}).get('resolutions', {}).get('data', [])])
+            })
+        # Handle other types (hash, URL, domain)
+        else:
+            result.update({
+                "type": "Hash" if (len(item) in [32, 40, 64]) else ("URL" if '://' in item else "Domain"),
+                "details": data['data']['id']
+            })
+        return result
     else:
         return {"item": item, "error": response.text}
 
@@ -35,7 +50,7 @@ def main():
     st.title("VirusTotal Bulk Lookup")
 
     uploaded_file = st.file_uploader("Upload CSV or TXT file", type=['csv', 'txt'])
-    user_input = st.text_area("Paste your hashes/IPs/URLs here (newline separated)")
+    user_input = st.text_area("Paste your hashes/IPs/URLs/Domains here (newline separated)")
     submit_button = st.button("Submit")
 
     if submit_button:
