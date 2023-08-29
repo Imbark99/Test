@@ -30,6 +30,11 @@ def get_virustotal_data(item):
     
     if response.status_code == 200:
         data = response.json()
+        st.write(data)
+
+        data = pd.DataFrame(data)
+
+        st.write(data)
         result = {
             "item": item,
             "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
