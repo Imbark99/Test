@@ -30,26 +30,39 @@ def get_virustotal_data(item):
     
     if response.status_code == 200:
         data = response.json()
-        st.write(data)
-
-        data = pd.DataFrame(data)
-
-        st.write(data)
+        
+        # General result structure
         result = {
             "item": item,
-            "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
-            "reputation": data['data']['attributes'].get('reputation', 'N/A'),
         }
         
+        # For IP addresses
         if endpoint.endswith(f'ip_addresses/{item}'):
             country_code = data['data']['attributes'].get('country', 'N/A')
             result.update({
                 "type": "IP",
-                "country": get_country_name(country_code)  # Use our conversion function here
+                "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
+                "reputation": data['data']['attributes'].get('reputation', 'N/A'),
+                "country": get_country_name(country_code)
             })
+        
+        # For hashes
+        elif len(item) in [32, 40, 64]:
+            hash_type = "MD5" if len(item) == 32 else ("SHA1" if len(item) == 40 else "SHA256")
+            signature_name = data['data']['attributes'].get('signature_info', 'N/A')
+            threat_label = data['data']['attributes'].get('threat_label', 'N/A')
+            result.update({
+                "type": hash_type,
+                "name": signature_name,
+                "threat_label": threat_label
+            })
+
+        # For URLs and Domains
         else:
             result.update({
-                "type": "Hash" if (len(item) in [32, 40, 64]) else ("URL" if '://' in item else "Domain"),
+                "type": "URL" if '://' in item else "Domain",
+                "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
+                "reputation": data['data']['attributes'].get('reputation', 'N/A'),
             })
             
         return result
@@ -71,9 +84,9 @@ def main():
                 data = pd.DataFrame({'item': [line.strip().decode('utf-8') for line in uploaded_file.readlines()]})
 
             results = [get_virustotal_data(item) for item in data['item']]
-            df_results = pd.DataFrame(results)
-
-            st.table(df_results)
+            df_results = pd.DataFrame(results)  # Convert to DataFrame
+            
+            st.write(df_results)  # Display DataFrame
 
             csv = df_results.to_csv(index=False)
             st.download_button("Download CSV", csv, "output.csv")
@@ -81,9 +94,9 @@ def main():
         elif user_input:
             items = user_input.split('\n')
             results = [get_virustotal_data(item.strip()) for item in items]
-            df_results = pd.DataFrame(results)
+            df_results = pd.DataFrame(results)  # Convert to DataFrame
             
-            st.table(df_results)
+            st.write(df_results)  # Display DataFrame
             
             csv = df_results.to_csv(index=False)
             st.download_button("Download CSV", csv, "output.csv")
