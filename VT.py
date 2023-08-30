@@ -56,11 +56,11 @@ def get_virustotal_data(item):
             threat_label = signature_names[0] if signature_names else "N/A"
             risk_score = data['data']['attributes'].get('reputation', 'N/A')
         
-        result.update({
-            "type": hash_type,
-            "name": file_name,
-            "threat_label": threat_label,
-            "risk_score": risk_score
+            result.update({
+                "type": hash_type,
+                "name": file_name,
+                "threat_label": threat_label,
+                "risk_score": risk_score
             })
 
         # For URLs and Domains
