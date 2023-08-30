@@ -54,13 +54,14 @@ def get_virustotal_data(item):
             file_name = data['data']['attributes'].get('name', 'N/A')
             signature_names = data['data']['attributes'].get('names', [])
             threat_label = signature_names[0] if signature_names else "N/A"
-            risk_score = data['data']['attributes'].get('reputation', 'N/A')
+            malicious_detections = data['data']['attributes']['last_analysis_stats']['malicious']
+            harmless_detections = data['data']['attributes']['last_analysis_stats']['harmless']
         
             result.update({
+            "item": item,
             "type": hash_type,
-            "name": file_name,
+            "score": f"{malicious_detections}/{harmless_detections}",
             "threat_label": threat_label,
-            "risk_score": risk_score
                 
             })
 
