@@ -49,11 +49,13 @@ def get_virustotal_data(item):
         # For hashes
         elif len(item) in [32, 40, 64]:
             hash_type = "MD5" if len(item) == 32 else ("SHA1" if len(item) == 40 else "SHA256")
-            signature_name = data['data']['attributes'].get('signature_info', 'N/A')
-            threat_label = data['data']['attributes'].get('threat_label', 'N/A')
+            file_name = data['data']['attributes'].get('name', 'N/A')
+            signature_names = data['data']['attributes'].get('names', [])
+            threat_label = signature_names[0] if signature_names else "N/A" 
+            
             result.update({
                 "type": hash_type,
-                "name": signature_name,
+                "name": file_name,
                 "threat_label": threat_label
             })
 
