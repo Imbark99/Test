@@ -441,10 +441,13 @@ def AbuseIPDB():
                                 st.write(f"Domains: {', '.join(filtered_domains)}")
                                 st.write("-" * 40)
 
+def VT():
+    
     
 page_names_to_funcs = {
     "Home":home,
-    "IP reputation": AbuseIPDB
+    "IP reputation": AbuseIPDB,
+    "Hash Reputation":VT
 }
 
 demo_name = st.sidebar.selectbox("Choose a mode", page_names_to_funcs.keys())
