@@ -19,7 +19,7 @@ def get_virustotal_data(item):
     # Determine if it's an IP, Hash, URL, or Domain
     if len(item.split('.')) == 4:  # Assuming it's an IP
         endpoint = f'https://www.virustotal.com/api/v3/ip_addresses/{item}'
-    elif len(item) == 32 or len(item) == 40 or len(item) == 64:  # Assuming it's a hash (MD5, SHA1, SHA256)
+    elif len(item) in [32, 40, 64]:  # Assuming it's a hash (MD5, SHA1, SHA256)
         endpoint = f'https://www.virustotal.com/api/v3/files/{item}'
     elif '://' in item:  # Assuming it's a URL
         endpoint = f'https://www.virustotal.com/api/v3/urls/{item}'
@@ -39,34 +39,40 @@ def get_virustotal_data(item):
         # For IP addresses
         if endpoint.endswith(f'ip_addresses/{item}'):
             country_code = data['data']['attributes'].get('country', 'N/A')
+            network = data['data']['attributes'].get('network', 'N/A')
             result.update({
                 "type": "IP",
                 "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
                 "reputation": data['data']['attributes'].get('reputation', 'N/A'),
-                "country": get_country_name(country_code)
+                "country": get_country_name(country_code),
+                "network": network
             })
-        
+
         # For hashes
         elif len(item) in [32, 40, 64]:
             hash_type = "MD5" if len(item) == 32 else ("SHA1" if len(item) == 40 else "SHA256")
             file_name = data['data']['attributes'].get('name', 'N/A')
             signature_names = data['data']['attributes'].get('names', [])
-            threat_label = signature_names[0] if signature_names else "N/A" 
+            threat_label = signature_names[0] if signature_names else "N/A"
+            size = data['data']['attributes'].get('size', 'N/A')
             
             result.update({
                 "type": hash_type,
                 "name": file_name,
-                "threat_label": threat_label
+                "threat_label": threat_label,
+                "size": size
             })
 
         # For URLs and Domains
         else:
+            categories = ", ".join(data['data']['attributes'].get('categories', {}).values())
             result.update({
                 "type": "URL" if '://' in item else "Domain",
                 "score": f"{data['data']['attributes']['last_analysis_stats']['malicious']}/{data['data']['attributes']['last_analysis_stats']['harmless']}",
                 "reputation": data['data']['attributes'].get('reputation', 'N/A'),
+                "categories": categories
             })
-            
+
         return result
     else:
         return {"item": item, "error": response.text}
