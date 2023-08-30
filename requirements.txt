@@ -10,3 +10,4 @@ netaddr
 python-dotenv
 requests
 urllib3
+plotly
