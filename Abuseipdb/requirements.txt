@@ -1,0 +1,7 @@
+certifi
+chardet
+idna
+netaddr
+python-dotenv
+requests
+urllib3
