@@ -9,7 +9,7 @@ import streamlit as st
 
 from Abuseipdb.AbuseIPDB import check_ip
 # favicon = Path(__file__).parent / 'favicon.ico'
-st.set_page_config(page_title="Cyberani Solutions | Bulker", layout="wide", initial_sidebar_state="auto", menu_items=None)
+st.set_page_config(page_title="Bulker", layout="wide", initial_sidebar_state="auto", menu_items=None)
 st.markdown("""<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">""",unsafe_allow_html=True)
 
 def img_to_bytes(img_path):
@@ -28,7 +28,7 @@ def img_to_html(img_path):
         img_to_bytes(img_path)
     )
     return img_html
-# Logo = Path(__file__).parent / 'cyberani.png'
+# Logo = Path(__file__).parent / 'test.png'
 # st.markdown(
 #         '<p style="text-align: center; color: grey;">' + img_to_html(Logo) + '</p><hr>', unsafe_allow_html=True)
 
